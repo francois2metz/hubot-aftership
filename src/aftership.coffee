@@ -39,9 +39,10 @@ module.exports = (robot) ->
   robot.router.post '/aftership', (req, res) ->
     query = querystring.parse(url.parse(req.url).query)
     data   = if req.body.payload? then JSON.parse req.body.payload else req.body
-    room   = data.msg.custom_fields.room
     secret = query.secret
     return res.status(403).send("NOK") if secret != process.env.AFTERSHIP_SECRET
+    room   = data.msg.custom_fields?.room
+    return res.status(400) if not room
 
     checkpoints = data.msg.checkpoints
     msgs = checkpoints.map (checkpoint) ->
