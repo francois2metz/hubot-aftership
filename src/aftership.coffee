@@ -41,6 +41,7 @@ module.exports = (robot) ->
     data   = if req.body.payload? then JSON.parse req.body.payload else req.body
     secret = query.secret
     return res.status(403).send("NOK") if secret != process.env.AFTERSHIP_SECRET
+    return res.status(200).send("OK") if data.msg.id == "000000000000000000000000"
     room   = data.msg.custom_fields?.room
     return res.status(400).send("NOK") if not room
 
