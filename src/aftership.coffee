@@ -42,7 +42,7 @@ module.exports = (robot) ->
     secret = query.secret
     return res.status(403).send("NOK") if secret != process.env.AFTERSHIP_SECRET
     room   = data.msg.custom_fields?.room
-    return res.status(400) if not room
+    return res.status(400).send("NOK") if not room
 
     checkpoints = data.msg.checkpoints
     msgs = checkpoints.map (checkpoint) ->
