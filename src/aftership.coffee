@@ -2,7 +2,8 @@
 #   Track your packages
 #
 # Configuration:
-#   LIST_OF_ENV_VARS_TO_SET
+#   AFTERSHIP_API_KEY
+#   AFTERSHIP_SECRET
 #
 # Commands:
 #   hubot track me <trackingnumber> - Track package
