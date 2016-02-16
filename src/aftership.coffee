@@ -16,6 +16,27 @@ Aftership = require('aftership')(process.env.AFTERSHIP_API_KEY)
 url = require('url')
 querystring = require('querystring')
 
+translateStatus = (status) ->
+  statuses =
+    Pending: 'pending'
+    InfoReceived: 'info received'
+    InTransit: 'in transit'
+    OutForDelivery: ':truck:'
+    AttemptFail: 'attempt fail'
+    Delivered: ':white_check_mark:'
+    Exception: ':heavy_exclamation_mark:'
+    Expired: 'expired'
+
+  statuses[status]
+
+printTrackingCurrentInfo = (tracking) ->
+  ":package: Package #{tracking.id}. Current status is #{translateStatus(tracking.tag)}."
+
+printCheckPointsInfo = (checkpoints)
+  msgs = checkpoints.reverse().map (checkpoint) ->
+    "- #{moment(checkpoint.checkpoint_time).fromNow()} #{translateStatus(checkpoint.tag)} #{checkpoint.message}."
+  msgs.join("\n")
+
 module.exports = (robot) ->
   robot.respond /track me (.+)/i, (res) ->
     params =
@@ -27,15 +48,13 @@ module.exports = (robot) ->
     Aftership.call 'POST', '/trackings', params, (err, result) ->
       return res.reply("err #{err.message}") if err
       tracking = result.data.tracking
-      res.reply "Package tracked. Use track info #{tracking.id}."
+      res.reply ":package: Package tracked. Use track info #{tracking.id}."
 
   robot.respond /track info (.+)/i, (res) ->
     Aftership.call 'GET', "/trackings/#{res.match[1]}", (err, result) ->
       return res.reply "err #{err.message}" if err
-      checkpoints = result.data.tracking.checkpoints.reverse()
-      msgs = checkpoints.map (checkpoint) ->
-       "- #{checkpoint.checkpoint_time} #{checkpoint.tag} #{checkpoint.message}."
-      res.reply msgs.join("\n")
+      tracking = result.data.tracking
+      res.reply printTrackingCurrentInfo(tracking) + "\n" + printCheckPointsInfo(tracking.checkpoints)
 
   robot.router.post '/aftership', (req, res) ->
     query = querystring.parse(url.parse(req.url).query)
@@ -46,9 +65,7 @@ module.exports = (robot) ->
     room   = data.msg.custom_fields?.room
     return res.status(400).send("NOK") if not room
 
-    checkpoints = data.msg.checkpoints
-    msgs = checkpoints.map (checkpoint) ->
-       "- #{checkpoint.checkpoint_time} #{checkpoint.tag} #{checkpoint.message}."
-    robot.messageRoom room, msgs.join("\n")
+    tracking = data.msg
+    robot.messageRoom room, printTrackingCurrentInfo(tracking) + "\n" + printCheckPointsInfo([tracking.checkpoints.reverse()[0]])
 
     res.send 'OK'
