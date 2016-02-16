@@ -15,6 +15,7 @@
 Aftership = require('aftership')(process.env.AFTERSHIP_API_KEY)
 url = require('url')
 querystring = require('querystring')
+moment = require('moment')
 
 translateStatus = (status) ->
   statuses =
